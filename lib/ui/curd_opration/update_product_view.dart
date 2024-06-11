@@ -1,22 +1,32 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:user_admin_panal/utils/ui_helper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:user_admin_panal/utils/ui_helper.dart';
+import 'dart:io'; // Add this import
 
-final _formKey = GlobalKey<FormState>();
+class UpdateProductView extends StatefulWidget {
+  String productId;
+  String productName;
+  String productDesc;
+  String amount;
+  String imgpath;
 
-class AddProductView extends StatefulWidget {
-  const AddProductView({super.key});
+  UpdateProductView(
+      {super.key,
+      required this.productId,
+      required this.productName,
+      required this.productDesc,
+      required this.amount,
+      required this.imgpath});
 
   @override
-  State<AddProductView> createState() => _AddProductViewState();
+  State<UpdateProductView> createState() => _UpdateProductViewState();
 }
 
-class _AddProductViewState extends State<AddProductView> {
+class _UpdateProductViewState extends State<UpdateProductView> {
   late FirebaseFirestore db;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController titleController = TextEditingController();
   TextEditingController descController = TextEditingController();
   TextEditingController amountController = TextEditingController();
@@ -26,24 +36,39 @@ class _AddProductViewState extends State<AddProductView> {
   String imgPath = '';
   bool isUploading = false;
   String? errorMessage;
+  //String? productId; // To store the product id if we are updating
 
   @override
   void initState() {
     super.initState();
     db = FirebaseFirestore.instance; // Firebase initialize
+
+    titleController.text = widget.productName;
+    descController.text = widget.productDesc;
+    amountController.text = widget.amount;
+    imgPath = widget.imgpath;
+    // Initialize with existing product data if available
+    /*    if (widget.product != null) {
+      var product = widget.product!;
+      titleController.text = product['name'];
+      descController.text = product['description'];
+      amountController.text = product['amount'].toString();
+      imgPath = product['image'];
+      productId = product.id; // Get the document ID
+    } */
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Product"),
+        title: const Text("Update Product"),
       ),
       body: userAdminPenal(),
     );
   }
 
-  userAdminPenal() {
+  Widget userAdminPenal() {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Padding(
@@ -77,7 +102,7 @@ class _AddProductViewState extends State<AddProductView> {
                     labelText: "Product Description"),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product desc...';
+                    return 'Please enter product description';
                   }
                   return null;
                 },
@@ -107,9 +132,10 @@ class _AddProductViewState extends State<AddProductView> {
                         height: 150,
                         width: 150,
                         decoration: BoxDecoration(
-                          // shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: FileImage(File(imgPath)),
+                            image: _image != null
+                                ? FileImage(File(_image!.path))
+                                : NetworkImage(imgPath) as ImageProvider,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -128,26 +154,34 @@ class _AddProductViewState extends State<AddProductView> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () async {
-                      if (_formKey.currentState!.validate() && _image != null) {
+                      if (_formKey.currentState!.validate() &&
+                          (imgPath != "" || _image != null)) {
                         setState(() {
                           isUploading = true;
                         });
 
                         try {
-                          var timeMills = DateTime.now().millisecondsSinceEpoch;
-                          var uploadRef = storageRef.child(
-                              'images/img_$timeMills.jpg'); // image path in firebase
+                          String downloadUrl = imgPath;
+                          if (_image != null) {
+                            var timeMills =
+                                DateTime.now().millisecondsSinceEpoch;
+                            var uploadRef = storageRef.child(
+                                'images/img_$timeMills.jpg'); // image path in firebase
 
-                          // Uploading the image file
-                          var uploadTask =
-                              await uploadRef.putFile(File(_image!.path));
-                          debugPrint("Upload Task $uploadTask");
-                          var downloadUrl = await uploadRef.getDownloadURL();
-                          debugPrint(
-                              "File uploaded successfully. Download URL: $downloadUrl ");
+                            // Uploading the image file
+                            var uploadTask =
+                                await uploadRef.putFile(File(_image!.path));
+                            debugPrint("Upload Task $uploadTask");
+                            downloadUrl = await uploadRef.getDownloadURL();
+                            debugPrint(
+                                "File uploaded successfully. Download URL: $downloadUrl ");
+                          }
 
-                          // Adding the product details to Firestore
-                          await db.collection('product').add({
+                          // Updating the product details in Firestore
+                          await db
+                              .collection('product')
+                              .doc(widget.productId)
+                              .update({
                             'name': titleController.text,
                             'description': descController.text,
                             'amount': amountController.text,
@@ -156,13 +190,14 @@ class _AddProductViewState extends State<AddProductView> {
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('Product Added Successfully')),
+                                content: Text('Product Updated Successfully')),
                           );
                           Navigator.pop(context);
                         } catch (error) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text('Failed to add product: $error')),
+                                content:
+                                    Text('Failed to update product: $error')),
                           );
                         } finally {
                           setState(() {
@@ -179,7 +214,7 @@ class _AddProductViewState extends State<AddProductView> {
                     },
                     child: isUploading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("Add"),
+                        : const Text("Update"),
                   )),
             ],
           ),
