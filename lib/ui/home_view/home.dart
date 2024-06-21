@@ -78,7 +78,7 @@ class _HomeViewState extends State<HomeView> {
                                         const Text(
                                           "Product       : ",
                                           style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.bold),
                                         ),
                                         wSpace(mWight: 10),
@@ -94,7 +94,7 @@ class _HomeViewState extends State<HomeView> {
                                         const Text(
                                           "Description : ",
                                           style: TextStyle(
-                                              fontSize: 16,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.bold),
                                         ),
                                         wSpace(mWight: 10),
@@ -107,9 +107,9 @@ class _HomeViewState extends State<HomeView> {
                                     Row(
                                       children: [
                                         const Text(
-                                          "Amount        : ",
+                                          "Amount       : ",
                                           style: const TextStyle(
-                                              fontSize: 16,
+                                              fontSize: 14,
                                               fontWeight: FontWeight.bold),
                                         ),
                                         wSpace(mWight: 10),
@@ -120,18 +120,12 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                               ),
                               wSpace(),
-                              Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    height: 100,
-                                    width: 100,
-                                    decoration: BoxDecoration(
-                                        //  color: Colors.red,
-                                        borderRadius: BorderRadius.circular(16),
-                                        image: DecorationImage(
-                                            image: NetworkImage(
-                                                "${product['image']}"),
-                                            fit: BoxFit.cover)),
+                              SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Image.network(
+                                    "${product['image']}",
+                                    fit: BoxFit.fill,
                                   ))
                             ],
                           ),
@@ -186,20 +180,15 @@ class _HomeViewState extends State<HomeView> {
           }
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        height: 50,
-        width: 200,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddProductView(),
-                ));
-          },
-          child: const Text("Add Product"),
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddProductView(),
+              ));
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

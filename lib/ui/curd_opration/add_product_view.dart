@@ -117,8 +117,19 @@ class _AddProductViewState extends State<AddProductView> {
                     : Container(
                         height: 150,
                         width: 150,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blueAccent),
+                            borderRadius: BorderRadius.circular(15)
+                            /* image: DecorationImage(
+                                image:
+                                    AssetImage("assets/empty_product.webp")) */
+                            ),
+                        child: Center(
+                          child: Text(
+                            "Select Image",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
               ),
